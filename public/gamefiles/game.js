@@ -4,12 +4,6 @@ console.log(username);
 const socketUrl = 'ws://localhost:8080';
 const socketConnection = new WebSocket(socketUrl, username);
 
-socketConnection.onopen = () => {
-    //setting connection binary type to arraybuffer, with is required for recieving array data
-    socketConnection.binaryType = 'arraybuffer';
-    //TODO: sending player name
-}
-
 socketConnection.onclose = function() {
     console.log('Closing connection');
     document.getElementById('quit').submit();
@@ -18,18 +12,24 @@ socketConnection.onclose = function() {
 socketConnection.onerror = err => {
     console.log(err);
 }
-
+let serverData;
 //recieving updates from the server
-//creates a typed array to send, with is required for the sending via WebSocket
-let playerdata = new Int32Array(2);
 socketConnection.onmessage = mess => {
-    //turning the recieved arraybuffer data into a useable array
-    let array = new Int32Array(mess.data);
-    //change player position if different
-    if(array != playerdata) {
-        player.x = array[0];
-        player.y = array[1];
-    } 
+    //turning the recieved message into useable JSON
+    serverData = JSON.parse(mess.data);
+    console.log(serverData);
+    if (serverData[username]) {
+        player.x = serverData[username][0];
+        player.y = serverData[username][1];
+    }
+    //updating other players
+    for (let i = 0; i < serverData.users.length; i++) {
+        const user = serverData.users[i];
+        if(user != username) {
+            players[user].x = serverData[user][0];
+            players[user].y = serverData[user][1];
+        }
+    }
 }
 
 //game
@@ -48,6 +48,7 @@ const config = {
 
 let game = new Phaser.Game(config);
 
+let players = {};
 let player;
 
 function preload() {
@@ -56,23 +57,30 @@ function preload() {
 }
 
 function create() {
-
+    //creating controlable player
     player = this.add.sprite(500, 500, 'player').setDisplaySize(32, 32);
 
     this.input.on('pointermove', function (pointer) {
-        player.x = pointer.x;
-        player.y = pointer.y;
+        player.x = Math.round(pointer.x);
+        player.y = Math.round(pointer.y);
     });
     
 }
 
 function update() {
-    //updates playerdata if data has changed
-    if(playerdata != [player.x, player.y]) {
-        //setting data
-        playerdata[0] = player.x;
-        playerdata[1] = player.y;
-        //send updates to the server
-        socketConnection.send(playerdata);
+    //creating sprites for other players
+    for (let i=0; i < serverData.users.length; i++) {
+        const user = serverData.users[i];
+        if (!(serverData.users[i] == username)&&!(players[user])) {
+            console.log('new sprite update');
+            const sprite = this.add.sprite(500, 500, 'player2').setDisplaySize(32, 32);
+            players[user] = sprite;
+        }
     }
+    //create player data to send to server
+    let playerdata = {
+        from: username,
+        data: [player.x, player.y]
+    }
+    socketConnection.send(JSON.stringify(playerdata));
 }
