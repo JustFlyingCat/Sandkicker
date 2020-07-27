@@ -1,0 +1,3 @@
+# SANDKICKER
+
+## Getting startet
