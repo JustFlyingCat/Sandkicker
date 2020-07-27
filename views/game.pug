@@ -1,5 +1,11 @@
 extends layout
 block content
+    div(id="Header")
+        h2(id="currentUser")= username
+        form(method="post", id="quit")
+            input(type="hidden" name="type" value="quit")
+            input(type="hidden" name="username" value=username)
+            input(type="submit" value="quit")
     div(class="game-div" id="gameContainer")
     script(src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js")
     script(src="gamefiles/game.js")

@@ -8,4 +8,4 @@
 ## tools
 - Phaser 3
 - p2.js
-- ws for node.js
+- ws for node.js(WebSocket)

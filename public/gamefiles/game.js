@@ -1,12 +1,19 @@
+const username = document.getElementById('currentUser').innerHTML;
+console.log(username);
 //conection to the server
 const socketUrl = 'ws://localhost:8080';
-const socketConnection = new WebSocket(socketUrl);
+const socketConnection = new WebSocket(socketUrl, username);
 
 socketConnection.onopen = () => {
     //setting connection binary type to arraybuffer, with is required for recieving array data
     socketConnection.binaryType = 'arraybuffer';
     //TODO: sending player name
 }
+
+socketConnection.onclose = function() {
+    console.log('Closing connection');
+    document.getElementById('quit').submit();
+} 
 
 socketConnection.onerror = err => {
     console.log(err);

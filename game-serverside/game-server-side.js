@@ -9,7 +9,16 @@ exports.run = function(server) {
         console.log('WebSockert server is running');
     }
     //testing connection with client
-    wss.on('connection', function (ws, socket, client) {
+    wss.on('connection', function (ws) {
+        let count = 0;
+        wss.clients.forEach(function each(client) {
+            if (client.protocol == ws.protocol) {
+                count += 1;
+            }
+        });
+        if (count > 1) {
+            ws.close();
+        }
         //seting binary type to arraybuffer, so i can recieve data as arrays
         ws.binaryType = 'arraybuffer';
         ws.on('message', message => {
