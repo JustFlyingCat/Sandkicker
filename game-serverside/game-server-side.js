@@ -44,7 +44,7 @@ exports.run = function(server) {
         })
     });
     //sending updates to the clients
-    setInterval(update, 17);
+    setInterval(update, 30); // server hz rate: 1000/second value|| second value: 1000/hz rate 
     //update function
     function update() {
         console.log(serverData);
