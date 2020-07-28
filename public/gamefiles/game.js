@@ -1,18 +1,19 @@
+//getting current username
 const username = document.getElementById('currentUser').innerHTML;
-console.log(username);
 //conection to the server
 const socketUrl = 'ws://localhost:8080';
 const socketConnection = new WebSocket(socketUrl, username);
-
+//sending user back to the login when disconnected
 socketConnection.onclose = function() {
     console.log('Closing connection');
     document.getElementById('quit').submit();
 } 
-
+//socket connection error handeling
 socketConnection.onerror = err => {
     console.log(err);
 }
 
+//global variables needed in multiple funcions
 let users = [];
 let players = {};
 let serverData;
