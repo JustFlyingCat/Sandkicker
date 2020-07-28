@@ -7,5 +7,7 @@
 
 ## tools
 - Phaser 3
+    - Used to calculate and render the game client-side
 - p2.js
 - ws for node.js(WebSocket)
+    - WebSocket library server-side
