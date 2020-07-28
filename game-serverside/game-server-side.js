@@ -1,7 +1,7 @@
 const WsWebSocket = require('ws');
 
 exports.run = function(server) {
-    let serverData = { users: [] };
+    let serverData = { users: [], userdata: {}, ball: {} };
 
     //creating a WebSocket server for the game
     const wss = new WsWebSocket.Server({ port:8080, server: server, clientTracking: true });
@@ -12,7 +12,6 @@ exports.run = function(server) {
     }
     //testing connection with client
     wss.on('connection', function (ws) {
-        serverData.users.push(ws.protocol);
         //checking if username already exists in the current playerbase
         let count = 0;
         wss.clients.forEach(function each(client) {
@@ -24,18 +23,18 @@ exports.run = function(server) {
             //cloing connection if name already exists (rest will be handled by the clientside)
             ws.close();
         }
+        serverData.users.push(ws.protocol);
         //recieving messages
         ws.on('message', message => {
             //turning the recived data into a useable array
             let data = JSON.parse(message);
-            serverData[data.from] = data.data;
-            //TODO: save the data from all users and send them back in regular intervalls
+            serverData.userdata[data.from] = { data: data.data, ball: data.ball };
         })
         ws.on('close', function() {
             //serch for the entry in the users list and delete them
             for (let i=0; i < serverData.users.length; i++) {
                 if(serverData.users[i] == ws.protocol) {
-                    delete serverData[serverData.users[i]];
+                    delete serverData.userdata[serverData.users[i]];
                     serverData.users.splice(i, 1);
                     //end the for event
                     i = serverData.users.length + 1;
@@ -47,7 +46,33 @@ exports.run = function(server) {
     setInterval(update, 30); // server hz rate: 1000/second value|| second value: 1000/hz rate 
     //update function
     function update() {
-        //console.log(serverData);
+        //optimising data to send
+        const dataToSend = serverData;
+        //processing balldata
+        let highestUser = {user: undefined, value: 0}
+        for(let i = 0; i < serverData.users.length; i++) {
+            const user = serverData.users[i];
+            if (serverData.userdata[user]) {
+                if(serverData.userdata[user].ball) {
+                    const x = serverData.userdata[user].ball.velocity.x;
+                    const y = serverData.userdata[user].ball.velocity.y;
+                    const value = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+                    if(value > highestUser.value) {
+                        highestUser.user = user;
+                    }
+                }
+            }
+        }
+        if(highestUser.user) {
+            dataToSend.ball = serverData.userdata[highestUser.user].ball;
+        }
+        //deleting unneedet data
+        for(let i = 0; i < dataToSend.users.length; i++) {
+            const user = dataToSend.users[i];
+            if (dataToSend.userdata[user]) {
+                delete dataToSend.userdata[user].ball
+            }
+        }
         wss.clients.forEach(function each(client) {
             client.send(JSON.stringify(serverData));
         });

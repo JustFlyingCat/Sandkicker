@@ -47,17 +47,25 @@ socketConnection.onmessage = mess => {
             }
         }
     }
+    //updating ball data
+    if(serverData.ball.position && serverData.ball.velocity) {
+        const dat = serverData.ball;
+        ball.body.reset(dat.position[0], dat.position[1]);
+        ball.body.setVelocity(dat.velocity.x, dat.velocity.y);
+    }
     //updating playerdata with output from the server
-    if (serverData[username]) {
-        player.x = serverData[username][0];
-        player.y = serverData[username][1];
+    if (serverData.userdata[username]) {
+        player.x = serverData.userdata[username].data[0];
+        player.y = serverData.userdata[username].data[1];
     }
     //updating other players
     for (let i = 0; i < users.length; i++) {
         const user = users[i];
         if(user != username) {
-            players[user].x = serverData[user][0];
-            players[user].y = serverData[user][1];
+            if(serverData.userdata[user]) {
+                players[user].x = serverData.userdata[user].data[0];
+                players[user].y = serverData.userdata[user].data[1];
+            }
         }
     }
 }
@@ -81,9 +89,7 @@ const config = {
         }
     }
 }
-
-let game = new Phaser.Game(config);
-
+//global variables for the game
 let player;
 let ball;
 
@@ -133,25 +139,30 @@ function create() {
 } 
 
 function update() {
-    //setting player velocity to 0 if there is no input
-    player.body.velocity = new Phaser.Math.Vector2;
-    //creating sprites for other players
+    //creating sprites for new players
     for (let i=0; i < users.length; i++) {
         //user currently processed
         const user = users[i];
         //add gameobject if it doesnt exist already
         if (!(users[i] == username)&&!(players[user])) {
-            const sprite = this.add.sprite(500, 500, 'player').setDisplaySize(32, 32).setCollideWorldBounds(true);
+            const sprite = this.physics.add.image(500, 500, 'player').setDisplaySize(32, 32).setCollideWorldBounds(true);
             sprite.body.isCircle = true;
             sprite.body.immovable = true;
+            //setting up colisions for the new sprite
+            //this.physics.add.collider(ball, sprite);
             //add oameobject to list of current users
             players[user] = sprite;
         }
     }
+    //setting player velocity to 0 if there is no input
+    player.body.velocity = new Phaser.Math.Vector2;
     //create player data to send to server
     let playerdata = {
         from: username,
-        data: [player.x, player.y]
+        data: [player.x, player.y],
+        ball: { position: [ball.x, ball.y], velocity: ball.body.velocity }
     }
     socketConnection.send(JSON.stringify(playerdata));
 }
+
+let game = new Phaser.Game(config);

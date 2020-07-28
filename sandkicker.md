@@ -11,3 +11,6 @@
 - p2.js
 - ws for node.js(WebSocket)
     - WebSocket library server-side
+
+## Lernings
+- JSON ist cool
