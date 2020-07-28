@@ -21,7 +21,7 @@ let serverData;
 socketConnection.onmessage = mess => {
     //turning the recieved message into useable JSON
     serverData = JSON.parse(mess.data);
-    console.log(serverData);
+    //console.log(serverData);
     if (users.length <= serverData.users.length) {
         users = serverData.users;
     } else {
@@ -66,36 +66,70 @@ const config = {
         preload: preload,
         create: create,
         update: update,
+    },
+    physics: {
+        default: 'arcade',
+        arcade: {
+            debug: true
+        }
     }
 }
 
 let game = new Phaser.Game(config);
 
 let player;
+let ball;
 
 function preload() {
     this.load.image('player', 'images/testImg/red-dot.png');
-    this.load.image('player2', 'images/testImg/black-dot.png')
+    this.load.image('ball', 'images/testImg/black-dot.png')
 }
 
 function create() {
-    //creating controlable player
-    player = this.add.sprite(500, 500, 'player').setDisplaySize(32, 32);
-
+    //enable world bounds
+    this.physics.world.setBoundsCollision(true, true, true, true);
+    //create ball
+    ball = this.physics.add.image(200, 200, 'ball').setDisplaySize(16, 16).setCollideWorldBounds(true).setBounce(1, 1);
+    ball.body.isCircle = true;
+    ball.body.drag = new Phaser.Math.Vector2(100, 100);
+    //creating player
+    player = this.physics.add.sprite(800, 500, 'player').setDisplaySize(32, 32).setCollideWorldBounds(true);
+    player.body.isCircle = true;
+    player.body.immovable = true;
+    //adding colliders
+    this.physics.add.collider(ball, player);
+    //inputs
+    this.input.on('pointerdown', function (pointer) {
+        this.input.mouse.requestPointerLock();
+    }, this);
     this.input.on('pointermove', function (pointer) {
-        player.x = Math.round(pointer.x);
-        player.y = Math.round(pointer.y);
-    });
-    
-}
+        if(this.input.mouse.locked) {
+            let x = player.x + 2 * pointer.movementX;
+            let y = player.y + 2 * pointer.movementY;
+            player.body.moves = true;
+            let pointerVel = Math.sqrt(Math.pow(pointer.movementX, 2) + Math.pow(pointer.movementY, 2));
+            if(pointerVel > 400) {pointerVel = 400}
+            this.physics.moveTo(player, x, y, 100 + 10 * pointerVel);
+            //player.x = pointer.x;
+            //player.y = pointer.y;
+        }
+    }, this);
+    this.input.keyboard.on('keydown_Q', function (event) {
+        if (this.input.mouse.locked)
+        {
+            this.input.mouse.releasePointerLock();
+        }
+    }, this);
+} 
 
 function update() {
+    player.body.velocity = new Phaser.Math.Vector2;
     //creating sprites for other players
     for (let i=0; i < users.length; i++) {
         const user = users[i];
         if (!(users[i] == username)&&!(players[user])) {
             console.log('new sprite update');
-            const sprite = this.add.sprite(500, 500, 'player2').setDisplaySize(32, 32);
+            const sprite = this.add.sprite(500, 500, 'player').setDisplaySize(32, 32);
             players[user] = sprite;
         }
     }

@@ -47,7 +47,7 @@ exports.run = function(server) {
     setInterval(update, 30); // server hz rate: 1000/second value|| second value: 1000/hz rate 
     //update function
     function update() {
-        console.log(serverData);
+        //console.log(serverData);
         wss.clients.forEach(function each(client) {
             client.send(JSON.stringify(serverData));
         });
