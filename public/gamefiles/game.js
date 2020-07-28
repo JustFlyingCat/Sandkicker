@@ -41,7 +41,8 @@ socketConnection.onmessage = mess => {
             }
             //if the user is no longer playing he will be removed
             if(!stillPlaying) {
-                players[users[i]].destroy();
+                players[users[i]].sprite.destroy();
+                players[users[i]].text.destroy();
                 delete players[users[i]];
                 users.splice(i, 1);
             }
@@ -63,8 +64,11 @@ socketConnection.onmessage = mess => {
         const user = users[i];
         if(user != username) {
             if(serverData.userdata[user]) {
-                players[user].x = serverData.userdata[user].data[0];
-                players[user].y = serverData.userdata[user].data[1];
+                const x = serverData.userdata[user].data[0];
+                const y = serverData.userdata[user].data[1];
+                players[user].sprite.x = x;
+                players[user].sprite.y = y;
+                players[user].text.setPosition(x - players[user].text.width/2, y - 32);
             }
         }
     }
@@ -91,6 +95,7 @@ const config = {
 }
 //global variables for the game
 let player;
+let playertext;
 let ball;
 
 function preload() {
@@ -109,6 +114,7 @@ function create() {
     player = this.physics.add.sprite(800, 500, 'player').setDisplaySize(32, 32).setCollideWorldBounds(true);
     player.body.isCircle = true;
     player.body.immovable = true;
+    playertext = this.add.text(player.body.x , player.body.y, username);
     //adding colliders
     this.physics.add.collider(ball, player);
     //inputs
@@ -139,6 +145,8 @@ function create() {
 } 
 
 function update() {
+    //updating poition of playername
+    playertext.setPosition(player.body.x - playertext.width/2 +16, player.body.y - 16);
     //creating sprites for new players
     for (let i=0; i < users.length; i++) {
         //user currently processed
@@ -148,10 +156,11 @@ function update() {
             const sprite = this.physics.add.image(500, 500, 'player').setDisplaySize(32, 32).setCollideWorldBounds(true);
             sprite.body.isCircle = true;
             sprite.body.immovable = true;
-            //setting up colisions for the new sprite
-            //this.physics.add.collider(ball, sprite);
+            const text = this.add.text(500, 500, users[i]);
+            //adding collision physics
+            this.physics.add.collider(ball, sprite);
             //add oameobject to list of current users
-            players[user] = sprite;
+            players[user] = {sprite: sprite, text: text};
         }
     }
     //setting player velocity to 0 if there is no input
