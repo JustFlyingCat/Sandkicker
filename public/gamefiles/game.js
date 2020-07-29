@@ -17,6 +17,7 @@ socketConnection.onerror = err => {
 let users = [];
 let players = {};
 let serverData;
+let game = false;
 
 //recieving updates from the server
 socketConnection.onmessage = mess => {
@@ -48,27 +49,31 @@ socketConnection.onmessage = mess => {
             }
         }
     }
-    //updating ball data
-    if(serverData.ball.position && serverData.ball.velocity) {
-        const dat = serverData.ball;
-        ball.body.reset(dat.position[0], dat.position[1]);
-        ball.body.setVelocity(dat.velocity.x, dat.velocity.y);
-    }
-    //updating playerdata with output from the server
-    if (serverData.userdata[username]) {
-        player.x = serverData.userdata[username].data[0];
-        player.y = serverData.userdata[username].data[1];
-    }
-    //updating other players
-    for (let i = 0; i < users.length; i++) {
-        const user = users[i];
-        if(user != username) {
-            if(serverData.userdata[user]) {
-                const x = serverData.userdata[user].data[0];
-                const y = serverData.userdata[user].data[1];
-                players[user].sprite.x = x;
-                players[user].sprite.y = y;
-                players[user].text.setPosition(x - players[user].text.width/2, y - 32);
+    if (!game) {
+        game = new Phaser.Game(config);
+    } else {
+        //updating ball data
+        if(serverData.ball.position && serverData.ball.velocity && ball) {
+            const dat = serverData.ball;
+            ball.body.reset(dat.position[0], dat.position[1]);
+            ball.body.setVelocity(dat.velocity.x, dat.velocity.y);
+        }
+        //updating playerdata with output from the server
+        if (serverData.userdata[username].data) {
+            player.x = serverData.userdata[username].data[0];
+            player.y = serverData.userdata[username].data[1];
+        }
+        //updating other players
+        for (let i = 0; i < users.length; i++) {
+            const user = users[i];
+            if(user != username) {
+                if(serverData.userdata[user]&&players[user]) {
+                    const x = serverData.userdata[user].data[0];
+                    const y = serverData.userdata[user].data[1];
+                    players[user].sprite.x = x;
+                    players[user].sprite.y = y;
+                    players[user].text.setPosition(x - players[user].text.width/2, y - 32);
+                }
             }
         }
     }
@@ -99,8 +104,9 @@ let playertext;
 let ball;
 
 function preload() {
-    this.load.image('player', 'images/testImg/red-dot.png');
-    this.load.image('ball', 'images/testImg/black-dot.png')
+    this.load.image('redPlayer', 'images/red-dot.png');
+    this.load.image('ball', 'images/black-dot.png');
+    this.load.image('bluePlayer', 'images/blue-dot.png');
 }
 
 function create() {
@@ -111,7 +117,11 @@ function create() {
     ball.body.isCircle = true;
     ball.body.drag = new Phaser.Math.Vector2(100, 100);
     //creating player
-    player = this.physics.add.sprite(800, 500, 'player').setDisplaySize(32, 32).setCollideWorldBounds(true);
+    if (serverData.userdata[username].team == 'blue') {
+        player = this.physics.add.sprite(800, 500, 'bluePlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
+    } else {
+        player = this.physics.add.sprite(800, 500, 'redPlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
+    }
     player.body.isCircle = true;
     player.body.immovable = true;
     playertext = this.add.text(player.body.x , player.body.y, username);
@@ -153,7 +163,12 @@ function update() {
         const user = users[i];
         //add gameobject if it doesnt exist already
         if (!(users[i] == username)&&!(players[user])) {
-            const sprite = this.physics.add.image(500, 500, 'player').setDisplaySize(32, 32).setCollideWorldBounds(true);
+            let sprite
+            if (serverData.userdata[user].team == 'blue') {
+                sprite = this.physics.add.image(500, 500, 'bluePlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
+            } else {
+                sprite = this.physics.add.image(500, 500, 'redPlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
+            }
             sprite.body.isCircle = true;
             sprite.body.immovable = true;
             const text = this.add.text(500, 500, users[i]);
@@ -162,6 +177,7 @@ function update() {
             //add oameobject to list of current users
             players[user] = {sprite: sprite, text: text};
         }
+        
     }
     //setting player velocity to 0 if there is no input
     player.body.velocity = new Phaser.Math.Vector2;
@@ -173,5 +189,3 @@ function update() {
     }
     socketConnection.send(JSON.stringify(playerdata));
 }
-
-let game = new Phaser.Game(config);

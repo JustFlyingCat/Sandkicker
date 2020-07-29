@@ -10,6 +10,8 @@ exports.run = function(server) {
     function testfunction() {
         console.log('WebSockert server is running');
     }
+    let redTeam = 0;
+    let blueTeam = 0;
     //testing connection with client
     wss.on('connection', function (ws) {
         //checking if username already exists in the current playerbase
@@ -24,16 +26,33 @@ exports.run = function(server) {
             ws.close();
         }
         serverData.users.push(ws.protocol);
+        //assing new user to one of the teams
+        let team;
+        if (blueTeam < redTeam) {
+            team = 'blue';
+            blueTeam += 1;
+        } else {
+            team = 'red';
+            redTeam += 1;
+        }
+        serverData.userdata[ws.protocol] = { team: team}
         //recieving messages
         ws.on('message', message => {
             //turning the recived data into a useable array
             let data = JSON.parse(message);
-            serverData.userdata[data.from] = { data: data.data, ball: data.ball };
+            serverData.userdata[data.from] = { data: data.data, ball: data.ball, team: serverData.userdata[data.from].team };
         })
         ws.on('close', function() {
             //serch for the entry in the users list and delete them
             for (let i=0; i < serverData.users.length; i++) {
                 if(serverData.users[i] == ws.protocol) {
+                    //removeing from team
+                    if ( serverData.userdata[serverData.users[i]].team == 'blue') {
+                        blueTeam -= 1;
+                    } else {
+                        redTeam -= 1;
+                    }
+                    //deleting data from the left user
                     delete serverData.userdata[serverData.users[i]];
                     serverData.users.splice(i, 1);
                     //end the for event
