@@ -3,7 +3,6 @@ exports.test = function(req, res) {
 }
 
 exports.playGame = function(req, res) {
-    console.log(req.body);
     if(req.body.type == 'play') {
         console.log(req.body.username + ' wants to play');
         res.render('game', {title: 'SK', username: req.body.username});

@@ -1,3 +1,15 @@
+//setting up the ready button
+const readyButton = document.getElementById('readyButton');
+readyButton.onclick = function() {
+    if (!serverData.gamestate) {
+        const dat = {
+            type: 'event',
+            event: 'ready'
+        }
+        socketConnection.send(JSON.stringify(dat));
+        readyButton.disabled = true;
+    }
+}
 //getting current username
 const username = document.getElementById('currentUser').innerHTML;
 //conection to the server
@@ -17,13 +29,15 @@ socketConnection.onerror = err => {
 let users = [];
 let players = {};
 let serverData;
+let gameScore;
 let game = false;
 
 //recieving updates from the server
 socketConnection.onmessage = mess => {
     //turning the recieved message into useable JSON
-    serverData = JSON.parse(mess.data);
-    if (serverData.type == 'data') {
+    const servDat = JSON.parse(mess.data);
+    if (servDat.type == 'data') {
+        serverData = servDat;
         //handle data updates
         //checking for changes in the user list
         if (users.length <= serverData.users.length) {
@@ -61,7 +75,7 @@ socketConnection.onmessage = mess => {
                 ball.body.setVelocity(dat.velocity.x, dat.velocity.y);
             }
             //updating playerdata with output from the server
-            if (serverData.userdata[username].data) {
+            if (serverData.userdata[username].data&&player) {
                 player.x = serverData.userdata[username].data[0];
                 player.y = serverData.userdata[username].data[1];
             }
@@ -79,14 +93,29 @@ socketConnection.onmessage = mess => {
                 }
             }
         }
-    } else if(serverData.type == 'event') {
+        //updating game score
+        if (gameScore != serverData.score) {
+            gameScore = serverData.score;
+        }
+    } else if(servDat.type == 'event') {
         //handle event updates
-        if (serverData.event == 'redGoalScore') {
-            console.log('Server: Red team scored');
-        } else if(serverData.event == 'blueGoalScore') {
-            console.log('Server: blue team scored');
+        if (serverData.event == 'goalScore') {
+            gameRoundReset();
+        } else if (serverData.event == 'matchEnd') {
+            matchEnd();
         }
     }
+}
+
+function matchEnd() {
+    //TODO: show the victor etc.
+    //delay
+    //call the match reset
+    matchReset();
+}
+
+function matchReset() {
+    //TODO: reset the match(incudel score and field)
 }
 
 //game
@@ -110,6 +139,7 @@ const config = {
 }
 //global variables for the game
 let player;
+let score;
 let playertext;
 let ball;
 
@@ -141,6 +171,9 @@ function create() {
     redGoal.body.immovable = true;
     const blueGoal = this.physics.add.sprite(780,400, 'goal').setDisplaySize(20, 80);
     blueGoal.body.immovable = true;
+    //create score
+    score = this.add.text(400, 20, 'BLUE 0 || 0 RED', {fontSize: '32px'});
+    score.setPosition(400 - score.width/2, 20)
     //adding colliders
     this.physics.add.collider(ball, redGoal, hitBlueGoal, null, true);
     this.physics.add.collider(ball, blueGoal, hitRedGoal, null, true);
@@ -152,16 +185,18 @@ function create() {
     }, this);
     //controlling the player while in locked state
     this.input.on('pointermove', function (pointer) {
-        if(this.input.mouse.locked) {
-            //setting the target sligthly before the player object so prevent overshooting of the mouse
-            let x = player.x + 2 * pointer.movementX;
-            let y = player.y + 2 * pointer.movementY;
-            //calculating the overall pointer velocity so we can work with it
-            let pointerVel = Math.sqrt(Math.pow(pointer.movementX, 2) + Math.pow(pointer.movementY, 2));
-            //setting a maximum for the velocity
-            if(pointerVel > 400) {pointerVel = 400}
-            //move the player object. Needs to be done like that as collisions are not applied otherwise
-            this.physics.moveTo(player, x, y, 100 + 10 * pointerVel);
+        if(serverData.gamestate) {
+            if(this.input.mouse.locked) {
+                //setting the target sligthly before the player object so prevent overshooting of the mouse
+                let x = player.x + 2 * pointer.movementX;
+                let y = player.y + 2 * pointer.movementY;
+                //calculating the overall pointer velocity so we can work with it
+                let pointerVel = Math.sqrt(Math.pow(pointer.movementX, 2) + Math.pow(pointer.movementY, 2));
+                //setting a maximum for the velocity
+                if(pointerVel > 400) {pointerVel = 400}
+                //move the player object. Needs to be done like that as collisions are not applied otherwise
+                this.physics.moveTo(player, x, y, 100 + 10 * pointerVel);
+            }
         }
     }, this);
     //undo lock
@@ -191,6 +226,7 @@ function hitRedGoal() {
 }
 
 function update() {
+    score.setText('BLUE ' + gameScore.blue + ' || ' + gameScore.red + ' RED');
     //updating poition of playername
     playertext.setPosition(player.body.x - playertext.width/2 +16, player.body.y - 16);
     //creating sprites for new players
@@ -225,4 +261,11 @@ function update() {
         ball: { position: [ball.x, ball.y], velocity: ball.body.velocity }
     }
     socketConnection.send(JSON.stringify(playerdata));
+    //update readyButton when needed again
+    if(serverData.gamestate) {
+        readyButton.hidden = true;
+        readyButton.disabled = false;
+    } else {
+        readyButton.hidden = false;
+    }
 }
