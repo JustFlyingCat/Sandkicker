@@ -13,7 +13,7 @@ readyButton.onclick = function() {
 //getting current username
 const username = document.getElementById('currentUser').innerHTML;
 //conection to the server
-const socketUrl = 'ws://localhost:8080';
+const socketUrl = 'ws://'+ window.location.hostname +':8080';
 const socketConnection = new WebSocket(socketUrl, username);
 //sending user back to the login when disconnected
 socketConnection.onclose = function() {
