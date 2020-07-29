@@ -23,59 +23,64 @@ let game = false;
 socketConnection.onmessage = mess => {
     //turning the recieved message into useable JSON
     serverData = JSON.parse(mess.data);
-    //checking for changes in the user list
-    if (users.length <= serverData.users.length) {
-        //updates users list when new player joins
-        users = serverData.users;
-    } else {
-        //checks if the list is still the same
-        for (let i = 0; i < users.length; i++) {
-            //user currently processed
-            const gameUser = users[i];
-            let stillPlaying = false;
-            //checking if te user is still playing
-            for (let k = 0; k < serverData.users.length; k++) {
-                const serverUser = serverData.users[k];
-                if (gameUser == serverUser) {
-                    stillPlaying = true;
+    if (serverData.type == 'data') {
+        //handle data updates
+        //checking for changes in the user list
+        if (users.length <= serverData.users.length) {
+            //updates users list when new player joins
+            users = serverData.users;
+        } else {
+            //checks if the list is still the same
+            for (let i = 0; i < users.length; i++) {
+                //user currently processed
+                const gameUser = users[i];
+                let stillPlaying = false;
+                //checking if te user is still playing
+                for (let k = 0; k < serverData.users.length; k++) {
+                    const serverUser = serverData.users[k];
+                    if (gameUser == serverUser) {
+                        stillPlaying = true;
+                    }
                 }
-            }
-            //if the user is no longer playing he will be removed
-            if(!stillPlaying) {
-                users.splice(i, 1);
-                players[gameUser].sprite.destroy();
-                players[gameUser].text.destroy();
-                delete players[gameUser];
-            }
-        }
-    }
-    if (!game) {
-        game = new Phaser.Game(config);
-    } else {
-        //updating ball data
-        if(serverData.ball.position && serverData.ball.velocity && ball) {
-            const dat = serverData.ball;
-            ball.body.reset(dat.position[0], dat.position[1]);
-            ball.body.setVelocity(dat.velocity.x, dat.velocity.y);
-        }
-        //updating playerdata with output from the server
-        if (serverData.userdata[username].data) {
-            player.x = serverData.userdata[username].data[0];
-            player.y = serverData.userdata[username].data[1];
-        }
-        //updating other players
-        for (let i = 0; i < users.length; i++) {
-            const user = users[i];
-            if(user != username) {
-                if(serverData.userdata[user]&&players[user]) {
-                    const x = serverData.userdata[user].data[0];
-                    const y = serverData.userdata[user].data[1];
-                    players[user].sprite.x = x;
-                    players[user].sprite.y = y;
-                    players[user].text.setPosition(x - players[user].text.width/2, y - 32);
+                //if the user is no longer playing he will be removed
+                if(!stillPlaying) {
+                    users.splice(i, 1);
+                    players[gameUser].sprite.destroy();
+                    players[gameUser].text.destroy();
+                    delete players[gameUser];
                 }
             }
         }
+        if (!game) {
+            game = new Phaser.Game(config);
+        } else {
+            //updating ball data
+            if(serverData.ball.position && serverData.ball.velocity && ball) {
+                const dat = serverData.ball;
+                ball.body.reset(dat.position[0], dat.position[1]);
+                ball.body.setVelocity(dat.velocity.x, dat.velocity.y);
+            }
+            //updating playerdata with output from the server
+            if (serverData.userdata[username].data) {
+                player.x = serverData.userdata[username].data[0];
+                player.y = serverData.userdata[username].data[1];
+            }
+            //updating other players
+            for (let i = 0; i < users.length; i++) {
+                const user = users[i];
+                if(user != username) {
+                    if(serverData.userdata[user]&&players[user]) {
+                        const x = serverData.userdata[user].data[0];
+                        const y = serverData.userdata[user].data[1];
+                        players[user].sprite.x = x;
+                        players[user].sprite.y = y;
+                        players[user].text.setPosition(x - players[user].text.width/2, y - 32);
+                    }
+                }
+            }
+        }
+    } else if(serverData.type == 'event') {
+        //handle event updates
     }
 }
 
@@ -84,7 +89,7 @@ const config = {
     type: Phaser.AUTO,
     width: 800,
     height: 800,
-    backgroundColor: "#4287f5",
+    backgroundColor: "#bfa136",
     parent: "gameContainer",
     scene: {
         preload: preload,
@@ -107,6 +112,7 @@ function preload() {
     this.load.image('redPlayer', 'images/red-dot.png');
     this.load.image('ball', 'images/black-dot.png');
     this.load.image('bluePlayer', 'images/blue-dot.png');
+    this.load.image('goal', 'images/goalBar.png');
 }
 
 function create() {
@@ -125,7 +131,14 @@ function create() {
     player.body.isCircle = true;
     player.body.immovable = true;
     playertext = this.add.text(player.body.x , player.body.y, username);
+    //create goals
+    const redGoal = this.physics.add.sprite(20,400, 'goal').setDisplaySize(20, 80);
+    redGoal.body.immovable = true;
+    const blueGoal = this.physics.add.sprite(780,400, 'goal').setDisplaySize(20, 80);
+    blueGoal.body.immovable = true;
     //adding colliders
+    this.physics.add.collider(ball, redGoal, hitBlueGoal, null, true);
+    this.physics.add.collider(ball, blueGoal, hitRedGoal, null, true);
     this.physics.add.collider(ball, player);
     //inputs
     //locking the mouse while playing
@@ -153,6 +166,24 @@ function create() {
         }
     }, this);
 } 
+
+function hitBlueGoal() {
+    const hitEvent = {
+        from: username,
+        type: 'event',
+        event: 'hitBlue'
+    }
+    socketConnection.send(JSON.stringify(hitEvent));
+}
+
+function hitRedGoal() {
+    const hitEvent = {
+        from: username,
+        type: 'event',
+        event: 'hitRed'
+    }
+    socketConnection.send(JSON.stringify(hitEvent));
+}
 
 function update() {
     //updating poition of playername
@@ -184,6 +215,7 @@ function update() {
     //create player data to send to server
     let playerdata = {
         from: username,
+        type: 'data',
         data: [player.x, player.y],
         ball: { position: [ball.x, ball.y], velocity: ball.body.velocity }
     }

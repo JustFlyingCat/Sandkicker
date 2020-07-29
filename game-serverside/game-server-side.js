@@ -1,7 +1,7 @@
 const WsWebSocket = require('ws');
 
 exports.run = function(server) {
-    let serverData = { users: [], userdata: {}, ball: {} };
+    let serverData = { type: 'data', users: [], userdata: {}, ball: {} };
 
     //creating a WebSocket server for the game
     const wss = new WsWebSocket.Server({ port:8080, server: server, clientTracking: true });
@@ -40,7 +40,19 @@ exports.run = function(server) {
         ws.on('message', message => {
             //turning the recived data into a useable array
             let data = JSON.parse(message);
-            serverData.userdata[data.from] = { data: data.data, ball: data.ball, team: serverData.userdata[data.from].team };
+            if (data.type == 'data') {
+                //handeling data messages
+                serverData.userdata[data.from] = { data: data.data, ball: data.ball, team: serverData.userdata[data.from].team };
+            } else if (data.type == 'event') {
+                //handeling event messages
+                if (data.event == 'hitBlue') {
+                    console.log('blue goal got hit');
+                } else if( data.event == 'hitRed') {
+                    console.log('red goal got hit');
+                }
+            } else {
+                console.log('recieved unclassified data from ' + data.from);
+            }
         })
         ws.on('close', function() {
             //serch for the entry in the users list and delete them
