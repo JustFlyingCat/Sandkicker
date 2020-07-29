@@ -42,10 +42,10 @@ socketConnection.onmessage = mess => {
             }
             //if the user is no longer playing he will be removed
             if(!stillPlaying) {
-                players[users[i]].sprite.destroy();
-                players[users[i]].text.destroy();
-                delete players[users[i]];
                 users.splice(i, 1);
+                players[gameUser].sprite.destroy();
+                players[gameUser].text.destroy();
+                delete players[gameUser];
             }
         }
     }
@@ -82,8 +82,8 @@ socketConnection.onmessage = mess => {
 //game
 const config = {
     type: Phaser.AUTO,
-    width: 1400,
-    height: 750,
+    width: 800,
+    height: 800,
     backgroundColor: "#4287f5",
     parent: "gameContainer",
     scene: {
@@ -113,14 +113,14 @@ function create() {
     //enable world bounds
     this.physics.world.setBoundsCollision(true, true, true, true);
     //create ball
-    ball = this.physics.add.image(200, 200, 'ball').setDisplaySize(16, 16).setCollideWorldBounds(true).setBounce(1, 1);
+    ball = this.physics.add.image(400, 400, 'ball').setDisplaySize(16, 16).setCollideWorldBounds(true).setBounce(1, 1);
     ball.body.isCircle = true;
     ball.body.drag = new Phaser.Math.Vector2(100, 100);
     //creating player
     if (serverData.userdata[username].team == 'blue') {
-        player = this.physics.add.sprite(800, 500, 'bluePlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
+        player = this.physics.add.sprite(100, 400, 'bluePlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
     } else {
-        player = this.physics.add.sprite(800, 500, 'redPlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
+        player = this.physics.add.sprite(700, 400, 'redPlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
     }
     player.body.isCircle = true;
     player.body.immovable = true;
@@ -162,12 +162,12 @@ function update() {
         //user currently processed
         const user = users[i];
         //add gameobject if it doesnt exist already
-        if (!(users[i] == username)&&!(players[user])) {
+        if (!(users[i] == username)&&!(players[user])&&serverData.userdata[user]) {
             let sprite
             if (serverData.userdata[user].team == 'blue') {
-                sprite = this.physics.add.image(500, 500, 'bluePlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
+                sprite = this.physics.add.image(100, 400, 'bluePlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
             } else {
-                sprite = this.physics.add.image(500, 500, 'redPlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
+                sprite = this.physics.add.image(700, 400, 'redPlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
             }
             sprite.body.isCircle = true;
             sprite.body.immovable = true;
