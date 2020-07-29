@@ -81,6 +81,11 @@ socketConnection.onmessage = mess => {
         }
     } else if(serverData.type == 'event') {
         //handle event updates
+        if (serverData.event == 'redGoalScore') {
+            console.log('Server: Red team scored');
+        } else if(serverData.event == 'blueGoalScore') {
+            console.log('Server: blue team scored');
+        }
     }
 }
 

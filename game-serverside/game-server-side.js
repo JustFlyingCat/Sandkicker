@@ -46,9 +46,11 @@ exports.run = function(server) {
             } else if (data.type == 'event') {
                 //handeling event messages
                 if (data.event == 'hitBlue') {
-                    console.log('blue goal got hit');
+                    blueGoalEvents += 1;
+                    checkGoal();
                 } else if( data.event == 'hitRed') {
-                    console.log('red goal got hit');
+                    redGoalEvents += 1;
+                    checkGoal();
                 }
             } else {
                 console.log('recieved unclassified data from ' + data.from);
@@ -73,6 +75,37 @@ exports.run = function(server) {
             }
         })
     });
+
+    let redGoalEvents = 0;
+    let blueGoalEvents = 0;
+
+    function checkGoal() {
+        if (redGoalEvents > serverData.users.length/2) {
+            //send red scored a goal
+            sendEvent('redGoalScore');
+            resetGoalEvents();
+        } else if (blueGoalEvents > serverData.users.length/2) {
+            //send blue scored a goal
+            sendEvent('blueGoalScore');
+            resetGoalEvents();
+        }
+    }
+
+    function resetGoalEvents() {
+        redGoalEvents = 0;
+        blueGoalEvents = 0;
+    }
+
+    function sendEvent(eventName) {
+        const event = {
+            type: 'event',
+            event: eventName
+        }
+        wss.clients.forEach(function each(client) {
+            client.send(JSON.stringify(event));
+        });
+    }
+
     //sending updates to the clients
     setInterval(update, 30); // server hz rate: 1000/second value|| second value: 1000/hz rate 
     //update function
