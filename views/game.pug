@@ -1,12 +1,20 @@
 extends layout
 block content
     div(id="Header")
-        h2(id="currentUser")= username
+        h4 You are playing as:
+        h1(id="currentUser")= username
         form(method="post", id="quit")
             input(type="hidden" name="type" value="quit")
             input(type="hidden" name="username" value=username)
             input(type="submit" value="quit")
     div(class="game-div" id="gameContainer")
-    button(id="readyButton") READY
+    button(id="readyButton") READY (SPACE)
+    br
+    br
+    h3 Inputs:
+    ul
+        li "Left Mouse Button" lock mouse to play
+        li "Q" or "ESC" to release mouse lock
+        li "SPACE" to press the ready button
     script(src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js")
     script(src="gamefiles/game.js")

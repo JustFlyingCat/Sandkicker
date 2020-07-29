@@ -24,60 +24,61 @@ exports.run = function(server) {
         if (count > 1) {
             //cloing connection if name already exists (rest will be handled by the clientside)
             ws.close();
-        }
-        serverData.users.push(ws.protocol);
-        //assing new user to one of the teams
-        let team;
-        if (blueTeamMembers < redTeamMembers) {
-            team = 'blue';
-            blueTeamMembers += 1;
         } else {
-            team = 'red';
-            redTeamMembers += 1;
-        }
-        serverData.userdata[ws.protocol] = { team: team }
-        //recieving messages
-        ws.on('message', message => {
-            //turning the recived data into a useable array
-            let data = JSON.parse(message);
-            if (data.type == 'data') {
-                //handeling data messages
-                serverData.userdata[data.from] = { data: data.data, ball: data.ball, team: serverData.userdata[data.from].team };
-            } else if (data.type == 'event') {
-                //handeling event messages
-                if (data.event == 'hitBlue') {
-                    blueGoalEvents += 1;
-                    checkGoal();
-                } else if( data.event == 'hitRed') {
-                    redGoalEvents += 1;
-                    checkGoal();
-                } else if(data.event == 'ready') {
-                    console.log(ws.protocol + ' is ready');
-                    usersReady += 1;
-                    checkAllReady();
-                }
+            serverData.users.push(ws.protocol);
+            //assing new user to one of the teams
+            let team;
+            if (blueTeamMembers < redTeamMembers) {
+                team = 'blue';
+                blueTeamMembers += 1;
             } else {
-                console.log('recieved unclassified data from ' + data.from);
+                team = 'red';
+                redTeamMembers += 1;
             }
-        })
-        ws.on('close', function() {
-            //serch for the entry in the users list and delete them
-            for (let i=0; i < serverData.users.length; i++) {
-                if(serverData.users[i] == ws.protocol) {
-                    //removeing from team
-                    if ( serverData.userdata[serverData.users[i]].team == 'blue') {
-                        blueTeamMembers -= 1;
-                    } else {
-                        redTeamMembers -= 1;
+            serverData.userdata[ws.protocol] = { team: team }
+            //recieving messages
+            ws.on('message', message => {
+                //turning the recived data into a useable array
+                let data = JSON.parse(message);
+                if (data.type == 'data') {
+                    //handeling data messages
+                    serverData.userdata[data.from] = { data: data.data, ball: data.ball, team: serverData.userdata[data.from].team };
+                } else if (data.type == 'event') {
+                    //handeling event messages
+                    if (data.event == 'hitBlue') {
+                        blueGoalEvents += 1;
+                        checkGoal();
+                    } else if( data.event == 'hitRed') {
+                        redGoalEvents += 1;
+                        checkGoal();
+                    } else if(data.event == 'ready') {
+                        console.log(ws.protocol + ' is ready');
+                        usersReady += 1;
+                        checkAllReady();
                     }
-                    //deleting data from the left user
-                    delete serverData.userdata[serverData.users[i]];
-                    serverData.users.splice(i, 1);
-                    //end the for event
-                    i = serverData.users.length + 1;
+                } else {
+                    console.log('recieved unclassified data from ' + data.from);
                 }
-            }
-        })
+            });
+            ws.on('close', function() {
+                //serch for the entry in the users list and delete them
+                for (let i=0; i < serverData.users.length; i++) {
+                    if(serverData.users[i] == ws.protocol) {
+                        //removeing from team
+                        if ( serverData.userdata[serverData.users[i]].team == 'blue') {
+                            blueTeamMembers -= 1;
+                        } else {
+                            redTeamMembers -= 1;
+                        }
+                        //deleting data from the left user
+                        delete serverData.userdata[serverData.users[i]];
+                        serverData.users.splice(i, 1);
+                        //end the for event
+                        i = serverData.users.length + 1;
+                    }
+                }
+            });
+        }
     });
     let usersReady = 0;
     function checkAllReady() {

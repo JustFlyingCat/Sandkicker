@@ -205,6 +205,9 @@ function create() {
             this.input.mouse.releasePointerLock();
         }
     }, this);
+    this.input.keyboard.on('keydown_SPACE', function (event) {
+        readyButton.click();
+    }, this);
 } 
 
 function hitBlueGoal() {
