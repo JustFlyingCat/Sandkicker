@@ -95,18 +95,16 @@ exports.run = function(server) {
     function checkGoal() {
         if (redGoalEvents > serverData.users.length/2) {
             //send blue scored a goal
-
-            //TODO: count the total goals as gamestate in the serverdata
+            resetGoalEvents();
             updateScore('blue');
             sendEvent('goalScore');
             serverData.gamestate = false;
-            resetGoalEvents();
         } else if (blueGoalEvents > serverData.users.length/2) {
             //send red scored a goal
+            resetGoalEvents();
             updateScore('red');
             sendEvent('goalScore');
             serverData.gamestate = false;
-            resetGoalEvents();
         }
     }
 
