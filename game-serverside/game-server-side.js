@@ -193,7 +193,18 @@ exports.run = function(server) {
                 }
             }
             if(highestUser.user) {
-                dataToSend.ball = serverData.userdata[highestUser.user].ball;
+                //setting position
+                dataToSend.ball.position = serverData.userdata[highestUser.user].ball.position;
+                //enforcing max ball velocity
+                const maxVel = 500;
+                const vel = serverData.userdata[highestUser.user].ball.velocity;
+                if (highestUser.value > maxVel) {
+                    const ratio = maxVel/highestUser.value;
+                    vel.x = vel.x * ratio;
+                    vel.y = vel.y * ratio;
+                }
+                //setting ball velocity
+                dataToSend.ball.velocity = vel;
             }
         } else {
             dataToSend.ball = serverData.ball;

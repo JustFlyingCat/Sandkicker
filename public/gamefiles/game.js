@@ -229,7 +229,7 @@ function create() {
                 //setting a maximum for the velocity
                 if(pointerVel > 400) {pointerVel = 400}
                 //move the player object. Needs to be done like that as collisions are not applied otherwise
-                this.physics.moveTo(player, x, y, 100 + 10 * pointerVel);
+                this.physics.moveTo(player, x, y, 100 + pointerVel);
             }
         }
     }, this);

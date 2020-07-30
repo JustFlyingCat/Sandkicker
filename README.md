@@ -2,13 +2,16 @@
 
 ## Getting startet
 
+## Server/Client communication
 
-## Server side
+### Event codes
 
-### event codes CLIENT -> SERVER
+#### event codes CLIENT -> SERVER
 - 'ready': The client has pressed the ready button
+- 'hitBlue': The Blue goal was hit
+- 'hitRed': The Red goal was hit
 
-### event codes SERVER -> CLIENT
+#### event codes SERVER -> CLIENT
 - 'allReady': indecates that all players are ready and the round will start in 3 sec
 - 'goalScore': a goal has been scored
 - 'matchEnd': one of the Teams has reached the maximum amount of Goals and won
