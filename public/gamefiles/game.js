@@ -1,12 +1,8 @@
 //setting up the ready button
 const readyButton = document.getElementById('readyButton');
 readyButton.onclick = function() {
-    if (!serverData.gamestate) {
-        const dat = {
-            type: 'event',
-            event: 'ready'
-        }
-        socketConnection.send(JSON.stringify(dat));
+    if (serverData.gamestate == 'readyWaiting') {
+        sendEvent('ready');
         readyButton.disabled = true;
     }
 }
@@ -28,7 +24,7 @@ socketConnection.onerror = err => {
 //global variables needed in multiple funcions
 let users = [];
 let players = {};
-let serverData;
+let serverData = { gamestate: undefined };
 let gameScore;
 let game = false;
 
@@ -99,23 +95,52 @@ socketConnection.onmessage = mess => {
         }
     } else if(servDat.type == 'event') {
         //handle event updates
-        if (serverData.event == 'goalScore') {
-            gameRoundReset();
-        } else if (serverData.event == 'matchEnd') {
+        if (servDat.event == 'goalScore') {
+            announceGoal();
+        } else if (servDat.event == 'matchEnd') {
             matchEnd();
+        } else if (servDat.event == 'allReady') {
+            setAnnouncement('starting in 3');
+            setTimeout(function() {
+                setAnnouncement('starting in 2')
+                setTimeout(function() {
+                    setAnnouncement('starting in 1');
+                    setTimeout(function() {
+                        setAnnouncement('!!GO!!');
+                    }, 1000);
+                }, 1000);
+            }, 1000);
         }
     }
 }
 
-function matchEnd() {
-    //TODO: show the victor etc.
-    //delay
-    //call the match reset
-    matchReset();
+function setAnnouncement(text, reset) {
+    //reset default value
+    if (!reset) {
+        reset = 750;
+    }
+    //seting announcement text
+    console.log(text);
+    announcementText.setText(text);
+    //allignment
+    announcementText.setPosition(400 - announcementText.width/2, 200)
+    //text reset
+    setTimeout(function() {announcementText.setText('')}, reset);
 }
 
-function matchReset() {
-    //TODO: reset the match(incudel score and field)
+function matchEnd() {
+    //timeout function, so the server can update the dada bevore evaluation
+    setTimeout(function() {
+        if(serverData.score.blue > serverData.score.red) {
+            setAnnouncement('!!BLUE WINS!!', 3000);
+        } else {
+            setAnnouncement('!!RED WINS!!', 3000);
+        }
+    }, 500);
+}
+
+function announceGoal() {
+    setAnnouncement('!!GOAL!!', 2000);
 }
 
 //game
@@ -142,6 +167,8 @@ let player;
 let score;
 let playertext;
 let ball;
+let gamestateText;
+let announcementText;
 
 function preload() {
     this.load.image('redPlayer', 'images/red-dot.png');
@@ -153,10 +180,14 @@ function preload() {
 function create() {
     //enable world bounds
     this.physics.world.setBoundsCollision(true, true, true, true);
+    //create an announcementText
+    announcementText = this.add.text(400, 400, '', {fontSize: '32px'});
+    //create gamestate text
+    gamestateText = this.add.text(10, 10, 'gamestate', {fontSize: '16px'});
     //create ball
     ball = this.physics.add.image(400, 400, 'ball').setDisplaySize(16, 16).setCollideWorldBounds(true).setBounce(1, 1);
     ball.body.isCircle = true;
-    ball.body.drag = new Phaser.Math.Vector2(100, 100);
+    ball.body.drag = new Phaser.Math.Vector2(0, 0);
     //creating player
     if (serverData.userdata[username].team == 'blue') {
         player = this.physics.add.sprite(100, 400, 'bluePlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
@@ -175,8 +206,8 @@ function create() {
     score = this.add.text(400, 20, 'BLUE 0 || 0 RED', {fontSize: '32px'});
     score.setPosition(400 - score.width/2, 20)
     //adding colliders
-    this.physics.add.collider(ball, redGoal, hitBlueGoal, null, true);
-    this.physics.add.collider(ball, blueGoal, hitRedGoal, null, true);
+    this.physics.add.collider(ball, redGoal, hitBlue, null, true);
+    this.physics.add.collider(ball, blueGoal, hitRed, null, true);
     this.physics.add.collider(ball, player);
     //inputs
     //locking the mouse while playing
@@ -185,7 +216,7 @@ function create() {
     }, this);
     //controlling the player while in locked state
     this.input.on('pointermove', function (pointer) {
-        if(serverData.gamestate) {
+        if(serverData.gamestate == 'playing') {
             if(this.input.mouse.locked) {
                 //setting the target sligthly before the player object so prevent overshooting of the mouse
                 let x = player.x + 2 * pointer.movementX;
@@ -208,24 +239,23 @@ function create() {
     this.input.keyboard.on('keydown_SPACE', function (event) {
         readyButton.click();
     }, this);
-} 
-
-function hitBlueGoal() {
-    const hitEvent = {
-        from: username,
-        type: 'event',
-        event: 'hitBlue'
-    }
-    socketConnection.send(JSON.stringify(hitEvent));
 }
 
-function hitRedGoal() {
-    const hitEvent = {
+function hitBlue() {
+    sendEvent('hitBlue');
+}
+
+function hitRed() {
+    sendEvent('hitRed');
+}
+
+function sendEvent(eventCode) {
+    const thisEvent = {
         from: username,
         type: 'event',
-        event: 'hitRed'
+        event: eventCode
     }
-    socketConnection.send(JSON.stringify(hitEvent));
+    socketConnection.send(JSON.stringify(thisEvent));
 }
 
 function update() {
@@ -265,10 +295,18 @@ function update() {
     }
     socketConnection.send(JSON.stringify(playerdata));
     //update readyButton when needed again
-    if(serverData.gamestate) {
+    if(!(serverData.gamestate == 'readyWaiting')) {
         readyButton.hidden = true;
         readyButton.disabled = false;
     } else {
         readyButton.hidden = false;
+    }
+    //update gamestate text field
+    if (serverData.gamestate == 'playerWaiting') {
+        gamestateText.setText('waiting for more players');
+    } else if (serverData.gamestate == 'readyWaiting') {
+        gamestateText.setText('waiting for ready up');
+    } else {
+        gamestateText.setText(serverData.gamestate);
     }
 }

@@ -2,7 +2,7 @@ const WsWebSocket = require('ws');
 
 exports.run = function(server) {
     //serdata
-    let serverData = { type: 'data', users: [], userdata: {}, ball: {}, score: { blue: 0, red: 0}, gamestate: false };
+    let serverData = { type: 'data', users: [], userdata: {}, ball: {}, score: { blue: 0, red: 0}, gamestate: 'playerWaiting' };
     //creating a WebSocket server for the game
     const wss = new WsWebSocket.Server({ port:8080, server: server, clientTracking: true });
     //testing if server is listening
@@ -61,6 +61,7 @@ exports.run = function(server) {
                 }
             });
             ws.on('close', function() {
+                serverData.score = { blue: 0, red: 0 };
                 //serch for the entry in the users list and delete them
                 for (let i=0; i < serverData.users.length; i++) {
                     if(serverData.users[i] == ws.protocol) {
@@ -84,8 +85,11 @@ exports.run = function(server) {
     function checkAllReady() {
         console.log(usersReady + ' out of ' + serverData.users.length + ' are Ready');
         if(usersReady == serverData.users.length) {
-            serverData.gamestate = true;
             usersReady = 0;
+            sendEvent('allReady')
+            setTimeout(function() {
+                serverData.gamestate = 'playing';
+            }, 3000);
         }
     }
 
@@ -98,13 +102,13 @@ exports.run = function(server) {
             resetGoalEvents();
             updateScore('blue');
             sendEvent('goalScore');
-            serverData.gamestate = false;
+            serverData.gamestate = 'readyWaiting';
         } else if (blueGoalEvents > serverData.users.length/2) {
             //send red scored a goal
             resetGoalEvents();
             updateScore('red');
             sendEvent('goalScore');
-            serverData.gamestate = false;
+            serverData.gamestate = 'readyWaiting';
         }
     }
 
@@ -127,9 +131,12 @@ exports.run = function(server) {
         } else if (side == 'red') {
             serverData.score.red += 1;
         }
-        if (serverData.score.blue >= 5 || serverData.score.red >= 5)/*5 is just a playceholder and can be replaced by a variable later on*/ {
+        if (serverData.score.blue >= 6 || serverData.score.red >= 6)/*5 is just a playceholder and can be replaced by a variable later on*/ {
             //end the match if one side has won
             sendEvent('matchEnd');
+            setTimeout(function() {
+                serverData.score = { blue: 0, red: 0};
+            }, 3000);
         }
     }
 
@@ -152,13 +159,21 @@ exports.run = function(server) {
     setInterval(update, 30); // server hz rate: 1000/second value|| second value: 1000/hz rate 
     //update function
     function update() {
-        if (!serverData.gamestate) {
+        if (redTeamMembers == blueTeamMembers && serverData.users.length != 0 && serverData.gamestate != 'playing') {
+            // if there is an even number of players the ready state begins
+            serverData.gamestate = 'readyWaiting';
+        } else if(redTeamMembers != blueTeamMembers) {
+            //if not, waiting for more players
+            serverData.gamestate = 'playerWaiting';
+        }
+        //players cant move if the gamestate isnt 'playing'
+        if (!(serverData.gamestate == 'playing')) {
             keepPlayers();
         }
         //optimising data to send
         const dataToSend = serverData;
         //processing balldata
-        if(serverData.gamestate) {
+        if(serverData.gamestate == 'playing') {
             let highestUser = {user: undefined, value: 0}
             for(let i = 0; i < serverData.users.length; i++) {
                 const user = serverData.users[i];
@@ -169,6 +184,7 @@ exports.run = function(server) {
                         const value = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
                         if(value > highestUser.value) {
                             highestUser.user = user;
+                            highestUser.value = value;
                         }
                     }
                 }
@@ -179,7 +195,7 @@ exports.run = function(server) {
         } else {
             dataToSend.ball = serverData.ball;
         }
-        //deleting unneedet data
+        //deleting unneeded data
         for(let i = 0; i < dataToSend.users.length; i++) {
             const user = dataToSend.users[i];
             if (dataToSend.userdata[user]) {
@@ -191,7 +207,7 @@ exports.run = function(server) {
         });
         //reseting serverdata if all users have left
         if (serverData.users.length == 0) {
-            serverData = { type: 'data', users: [], userdata: {}, ball: {}, score: { blue: 0, red: 0}, gamestate: false };
+            serverData = { type: 'data', users: [], userdata: {}, ball: {}, score: { blue: 0, red: 0}, gamestate: 'playerWaiting' };
         }
     }
 }
