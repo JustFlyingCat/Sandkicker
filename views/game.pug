@@ -8,7 +8,7 @@ block content
             input(type="hidden" name="username" value=username)
             input(type="submit" value="quit")
     div(class="game-div" id="gameContainer")
-    button(id="readyButton") READY (SPACE)
+    button(id="readyButton") READY (W)
     br
     br
     div(id="bottom")
@@ -27,6 +27,9 @@ block content
                 li "mouseMovement" move you character around
                 li "Left Mouse Button" lock mouse
                 li "Q" or "ESC" to release mouse lock
-                li "SPACE" to press the ready button
+                li "W" to press the ready button
+                li Mouse speed(maximum player speed is capped, so choose with caution):
+                    input(type="range", min="1", max="100", value="20", id="input", class="text")
+                    p(id="mouseSpeed", class="text") current: 20
     script(src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js")
     script(src="gamefiles/game.js")

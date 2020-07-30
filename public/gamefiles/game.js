@@ -1,3 +1,11 @@
+//choosing input method
+const inputSlider = document.getElementById('input');
+const speedTextfield = document.getElementById('mouseSpeed');
+let mouseSpeed = 20;
+inputSlider.oninput = function() {
+    mouseSpeed = inputSlider.value;
+    speedTextfield.innerHTML = 'current: ' + inputSlider.value;
+}
 //setting up the ready button
 const readyButton = document.getElementById('readyButton');
 readyButton.onclick = function() {
@@ -147,6 +155,8 @@ function announceGoal() {
 //constants for the game config wich are also used elsewere;
 const gameWidth = 1200;
 const gameHeight = 800;
+const playerBaseSpeed = 100;
+const maxPlayerspeed = 500;
 const config = {
     type: Phaser.AUTO,
     width: gameWidth,
@@ -204,9 +214,9 @@ function create() {
     player.body.immovable = true;
     playertext = this.add.text(player.body.x , player.body.y, username);
     //create goals
-    const redGoal = this.physics.add.sprite(20 , gameHeight/2, 'goal').setDisplaySize(20, 80);
+    const redGoal = this.physics.add.sprite(10 , gameHeight/2, 'goal').setDisplaySize(20, gameHeight/4);
     redGoal.body.immovable = true;
-    const blueGoal = this.physics.add.sprite(gameWidth - 20 , gameHeight/2, 'goal').setDisplaySize(20, gameHeight/8);
+    const blueGoal = this.physics.add.sprite(gameWidth - 10 , gameHeight/2, 'goal').setDisplaySize(20, gameHeight/4);
     blueGoal.body.immovable = true;
     //create score
     score = this.add.text(gameWidth/2, 20, 'BLUE 0 || 0 RED', {fontSize: '32px'});
@@ -229,11 +239,10 @@ function create() {
                 let y = player.y + 2 * pointer.movementY;
                 //calculating the overall pointer velocity so we can work with it
                 let pointerVel = Math.sqrt(Math.pow(pointer.movementX, 2) + Math.pow(pointer.movementY, 2));
-                console.log(pointerVel);
-                //setting a maximum for the velocity
-                if(pointerVel > 50) {pointerVel = 50}
+                pointerVel = mouseSpeed * pointerVel;
+                if(pointerVel > maxPlayerspeed - playerBaseSpeed) {pointerVel = maxPlayerspeed - playerBaseSpeed}
                 //move the player object. Needs to be done like that as collisions are not applied otherwise
-                this.physics.moveTo(player, x, y, 100 + 8 * pointerVel);
+                this.physics.moveTo(player, x, y, playerBaseSpeed + pointerVel);
             }
         }
     }, this);
@@ -243,7 +252,7 @@ function create() {
             this.input.mouse.releasePointerLock();
         }
     }, this);
-    this.input.keyboard.on('keydown_SPACE', function (event) {
+    this.input.keyboard.on('keydown_W', function (event) {
         readyButton.click();
     }, this);
 }
