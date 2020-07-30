@@ -1,6 +1,9 @@
 const WsWebSocket = require('ws');
 
 exports.run = function(server) {
+    //gameconfig data
+    const gameWidth = 1200;
+    const gameHeight = 800;
     //serdata
     let serverData = { type: 'data', users: [], userdata: {}, ball: {}, score: { blue: 0, red: 0}, gamestate: 'playerWaiting' };
     //creating a WebSocket server for the game
@@ -117,12 +120,12 @@ exports.run = function(server) {
         for (let i = 0; i < serverData.users.length; i++) {
             const user = serverData.users[i];
             if(serverData.userdata[user].team == 'blue') {
-                serverData.userdata[user].data = [100, 400];
+                serverData.userdata[user].data = [100, gameHeight/2];
             } else {
-                serverData.userdata[user].data = [700, 400];
+                serverData.userdata[user].data = [gameWidth - 100, gameHeight/2];
             }
         }
-        serverData.ball = { position: [400, 400], velocity: {x: 0, y: 0} }
+        serverData.ball = { position: [gameWidth/2, gameHeight/2], velocity: {x: 0, y: 0} }
     }
 
     function updateScore(side) {

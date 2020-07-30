@@ -123,7 +123,7 @@ function setAnnouncement(text, reset) {
     console.log(text);
     announcementText.setText(text);
     //allignment
-    announcementText.setPosition(400 - announcementText.width/2, 200)
+    announcementText.setPosition(gameWidth/2 - announcementText.width/2, gameHeight/4)
     //text reset
     setTimeout(function() {announcementText.setText('')}, reset);
 }
@@ -144,10 +144,13 @@ function announceGoal() {
 }
 
 //game
+//constants for the game config wich are also used elsewere;
+const gameWidth = 1200;
+const gameHeight = 800;
 const config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 800,
+    width: gameWidth,
+    height: gameHeight,
     backgroundColor: "#bfa136",
     parent: "gameContainer",
     scene: {
@@ -181,30 +184,30 @@ function create() {
     //enable world bounds
     this.physics.world.setBoundsCollision(true, true, true, true);
     //create an announcementText
-    announcementText = this.add.text(400, 400, '', {fontSize: '32px'});
+    announcementText = this.add.text(gameWidth/2, gameHeight/2, '', {fontSize: '32px'});
     //create gamestate text
     gamestateText = this.add.text(10, 10, 'gamestate', {fontSize: '16px'});
     //create ball
-    ball = this.physics.add.image(400, 400, 'ball').setDisplaySize(16, 16).setCollideWorldBounds(true).setBounce(1, 1);
+    ball = this.physics.add.image(gameWidth/2, gameHeight/2, 'ball').setDisplaySize(16, 16).setCollideWorldBounds(true).setBounce(1, 1);
     ball.body.isCircle = true;
     ball.body.drag = new Phaser.Math.Vector2(0, 0);
     //creating player
     if (serverData.userdata[username].team == 'blue') {
-        player = this.physics.add.sprite(100, 400, 'bluePlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
+        player = this.physics.add.sprite(100, gameHeight/2, 'bluePlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
     } else {
-        player = this.physics.add.sprite(700, 400, 'redPlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
+        player = this.physics.add.sprite(gameWidth - 100, gameHeight/2, 'redPlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
     }
     player.body.isCircle = true;
     player.body.immovable = true;
     playertext = this.add.text(player.body.x , player.body.y, username);
     //create goals
-    const redGoal = this.physics.add.sprite(20,400, 'goal').setDisplaySize(20, 80);
+    const redGoal = this.physics.add.sprite(20 , gameHeight/2, 'goal').setDisplaySize(20, 80);
     redGoal.body.immovable = true;
-    const blueGoal = this.physics.add.sprite(780,400, 'goal').setDisplaySize(20, 80);
+    const blueGoal = this.physics.add.sprite(gameWidth - 20 , gameHeight/2, 'goal').setDisplaySize(20, gameHeight/8);
     blueGoal.body.immovable = true;
     //create score
-    score = this.add.text(400, 20, 'BLUE 0 || 0 RED', {fontSize: '32px'});
-    score.setPosition(400 - score.width/2, 20)
+    score = this.add.text(gameWidth/2, 20, 'BLUE 0 || 0 RED', {fontSize: '32px'});
+    score.setPosition(gameWidth/2 - score.width/2, 20)
     //adding colliders
     this.physics.add.collider(ball, redGoal, hitBlue, null, true);
     this.physics.add.collider(ball, blueGoal, hitRed, null, true);
@@ -280,13 +283,13 @@ function update() {
         if (!(users[i] == username)&&!(players[user])&&serverData.userdata[user]) {
             let sprite
             if (serverData.userdata[user].team == 'blue') {
-                sprite = this.physics.add.image(100, 400, 'bluePlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
+                sprite = this.physics.add.image(100, gameHeight/2, 'bluePlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
             } else {
-                sprite = this.physics.add.image(700, 400, 'redPlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
+                sprite = this.physics.add.image(gameWidth - 100, gameHeight/2, 'redPlayer').setDisplaySize(32, 32).setCollideWorldBounds(true);
             }
             sprite.body.isCircle = true;
             sprite.body.immovable = true;
-            const text = this.add.text(500, 500, users[i]);
+            const text = this.add.text(gameWidth/2, gameHeight/2, users[i]);
             //adding collision physics
             this.physics.add.collider(ball, sprite);
             //add oameobject to list of current users
