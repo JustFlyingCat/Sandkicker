@@ -172,6 +172,7 @@ let playertext;
 let ball;
 let gamestateText;
 let announcementText;
+let playerTeam;
 
 function preload() {
     this.load.image('redPlayer', 'images/red-dot.png');
@@ -185,6 +186,8 @@ function create() {
     this.physics.world.setBoundsCollision(true, true, true, true);
     //create an announcementText
     announcementText = this.add.text(gameWidth/2, gameHeight/2, '', {fontSize: '32px'});
+    //create team text
+    playerTeam = this.add.text(gameWidth - 10, 10, 'team: ?', {fontSize: '16px'});
     //create gamestate text
     gamestateText = this.add.text(10, 10, 'gamestate', {fontSize: '16px'});
     //create ball
@@ -273,6 +276,10 @@ function sendEvent(eventCode) {
 }
 
 function update() {
+    //set player team
+    playerTeam.setText('team: ' + serverData.userdata[username].team);
+    playerTeam.setPosition(gameWidth - 10 - playerTeam.width, 10);
+    //update game score
     score.setText('BLUE ' + gameScore.blue + ' || ' + gameScore.red + ' RED');
     //updating poition of playername
     playertext.setPosition(player.body.x - playertext.width/2 +16, player.body.y - 16);
