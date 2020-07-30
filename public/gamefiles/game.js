@@ -243,10 +243,20 @@ function create() {
 
 function hitBlue() {
     sendEvent('hitBlue');
+    //preventing double hit regestration by freezing the ball for a short ammount of time
+    ball.body.moves = false
+    setTimeout(function() {
+        ball.body.moves = true;
+    }, 50);
 }
 
 function hitRed() {
     sendEvent('hitRed');
+    //preventing double hit regestration by freezing the ball for a short ammount of time
+    ball.body.moves = false
+    setTimeout(function() {
+        ball.body.moves = true;
+    }, 50);
 }
 
 function sendEvent(eventCode) {
