@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 
-const testController = require('../controller/textController');
+const controller = require('../controller/controller');
 
 /* GET home page. */
-router.get('/', testController.index);
+router.get('/', controller.index);
 //post on homepage to play the game
-router.post('/', testController.playGame);
+router.post('/', controller.playGame);
 
 module.exports = router;

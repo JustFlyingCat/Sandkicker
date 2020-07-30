@@ -1,11 +1,19 @@
 extends layout
 
 block content
-  h1(id="title")= title
-  p Welcome to #{title}
-  p please choose a username below
-  form(method="post")
-    input(type="hidden" name="type" value="play")
-    input(placeholder="Username", name="username", type="text", size="24", maxlength="16" , required="required", pattern="[A-Za-z0-9]+")
-    input(type="submit", id="sub", value="play")
+  div(id="login" class="text")
+    h1(id="title")= title
+    p Welcome to #{title}, an online football game by Maximilian P.
+    p please choose a diplay-name below
+    form(method="post")
+      input(type="hidden" name="type" value="play")
+      input(placeholder="Username", name="username", type="text", size="24", maxlength="16" , required="required", pattern="[A-Za-z0-9]+")
+      input(type="submit", id="sub", value="play")
+  div(id="howToPlay", class="text")
+            h3 How to play:
+            p When connected the server waits for an even ammount of players in each Team. 
+            p Once thats the case, the READY button will appear below the game window. When each player pressed their READY button a countdown will appear in the middle of the screen after wich the game starts.
+            p The Goal of the game is to push the black ball into the goal of the opposing Team.
+            p When a goal is scored, the field will reset and everyone needs to ready up again.
+            p The first team to reach 6 goals wins
   script(src="javascripts/main.js")
