@@ -226,10 +226,11 @@ function create() {
                 let y = player.y + 2 * pointer.movementY;
                 //calculating the overall pointer velocity so we can work with it
                 let pointerVel = Math.sqrt(Math.pow(pointer.movementX, 2) + Math.pow(pointer.movementY, 2));
+                console.log(pointerVel);
                 //setting a maximum for the velocity
-                if(pointerVel > 400) {pointerVel = 400}
+                if(pointerVel > 50) {pointerVel = 50}
                 //move the player object. Needs to be done like that as collisions are not applied otherwise
-                this.physics.moveTo(player, x, y, 100 + pointerVel);
+                this.physics.moveTo(player, x, y, 100 + 8 * pointerVel);
             }
         }
     }, this);
