@@ -179,6 +179,7 @@ const config = {
 let player;
 let score;
 let playertext;
+let playerIndet;
 let ball;
 let gamestateText;
 let announcementText;
@@ -189,6 +190,7 @@ function preload() {
     this.load.image('ball', 'images/black-dot.png');
     this.load.image('bluePlayer', 'images/blue-dot.png');
     this.load.image('goal', 'images/goalBar.png');
+    this.load.image('ident', 'images/green-dot.png');
 }
 
 function create() {
@@ -212,6 +214,8 @@ function create() {
     }
     player.body.isCircle = true;
     player.body.immovable = true;
+    //a dot to identify the player
+    playerIndet = this.add.sprite(player.x, player.y, 'ident').setDisplaySize(16, 16);
     playertext = this.add.text(player.body.x , player.body.y, username);
     //create goals
     const redGoal = this.physics.add.sprite(10 , gameHeight/2, 'goal').setDisplaySize(20, gameHeight/4);
@@ -290,8 +294,9 @@ function update() {
     playerTeam.setPosition(gameWidth - 10 - playerTeam.width, 10);
     //update game score
     score.setText('BLUE ' + gameScore.blue + ' || ' + gameScore.red + ' RED');
-    //updating poition of playername
+    //updating poition of playername and identifier
     playertext.setPosition(player.body.x - playertext.width/2 +16, player.body.y - 16);
+    playerIndet.setPosition(player.x, player.y);
     //creating sprites for new players
     for (let i=0; i < users.length; i++) {
         //user currently processed
@@ -312,7 +317,6 @@ function update() {
             //add oameobject to list of current users
             players[user] = {sprite: sprite, text: text};
         }
-        
     }
     //setting player velocity to 0 if there is no input
     player.body.velocity = new Phaser.Math.Vector2;
