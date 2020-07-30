@@ -28,6 +28,7 @@ exports.run = function(server) {
             //cloing connection if name already exists (rest will be handled by the clientside)
             ws.close();
         } else {
+            //accepting user and setting up Event listeners
             serverData.users.push(ws.protocol);
             //assing new user to one of the teams
             let team;
@@ -84,6 +85,7 @@ exports.run = function(server) {
             });
         }
     });
+    //check if users are ready
     let usersReady = 0;
     function checkAllReady() {
         console.log(usersReady + ' out of ' + serverData.users.length + ' are Ready');
