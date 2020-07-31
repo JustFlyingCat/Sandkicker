@@ -1,6 +1,6 @@
 const gameConfig = {
-    gameWidth: 800,
-    gameHeight: 200 
+    gameWidth: 1000,
+    gameHeight: 600 
 }
 
 if (typeof window == 'undefined') {
