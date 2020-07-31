@@ -153,8 +153,8 @@ function announceGoal() {
 
 //game
 //constants for the game config wich are also used elsewere;
-const gameWidth = 1200;
-const gameHeight = 800;
+const gameWidth = 1000;
+const gameHeight = 600;
 const playerBaseSpeed = 100;
 const maxPlayerspeed = 500;
 const config = {

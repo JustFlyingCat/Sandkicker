@@ -2,8 +2,8 @@ const WsWebSocket = require('ws');
 
 exports.run = function(server) {
     //gameconfig data
-    const gameWidth = 1200;
-    const gameHeight = 800;
+    const gameWidth = 1000;
+    const gameHeight = 600;
     //serdata
     let serverData = { type: 'data', users: [], userdata: {}, ball: {}, score: { blue: 0, red: 0}, gamestate: 'playerWaiting' };
     //creating a WebSocket server for the game
