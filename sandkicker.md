@@ -51,3 +51,15 @@
     - Used to calculate and render the game client-side
 - WebSockets
     - ws library server-side
+
+## Further development
+
+### Tech/code
+- Refactoring/cleaining up the code(important)
+- calculating physics on the server for a better experience
+- Multiple lobbies/sessions at the time
+
+### Game
+- Setting up the config for the game yourself(maximum speeds, object sizes, amount of goals, ammount of teams, etc.)
+- more gameplay elements(obstacles, power ups, portals, etc.)
+- better art
