@@ -57,6 +57,8 @@
 ### Tech/code
 - Refactoring/cleaining up the code(important)
 - calculating physics on the server for a better experience
+    - Running Phaser 3 in Headless mode on the server(would require a nearly complete rebuild of the game)
+    - useing a physics calculating library such as p2js to calculate/confirm phsyics serverside(would probably only require an extention of the server side code);
 - Multiple lobbies/sessions at the time
 
 ### Game
