@@ -5,7 +5,7 @@
 - gamsessions for 2-6 players at a time
 - multiple sessions possible at once
 
-## result
+## Result
 - topdown football game
 - gamesessions with 2 - (idk yet) players (needs an even number)
 - single gamesession
