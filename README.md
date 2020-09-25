@@ -1,5 +1,8 @@
 # SANDKICKER
 
+## What is Sandkicker?
+Sandkicker is a small browsergame i developed during an internship at Sandstom Media. Its a football game were teams of the same size play against each other.
+
 ## Getting startet
 
 ## Server/Client communication
